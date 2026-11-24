@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Softwave — an instrumental sketch studio</title>
+  <meta name="description" content="Softwave turns a few words into an original instrumental track — composed, played and exported entirely in your browser.">
+  <meta name="theme-color" content="#f7f2ea">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:title" content="Softwave — a little music from a few words">
+  <meta property="og:description" content="A local, private, browser-based instrumental music generator. Type a mood, press play, export WAV or MIDI.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/icons/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/studio.css">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Softwave",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any modern browser",
+      "description": "A local, private, browser-based instrumental music generator with WAV and MIDI export.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#studio">Skip to the studio</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Softwave home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none">
+          <rect x="2" y="2" width="60" height="60" rx="17" fill="url(#softwave-mark)"/>
+          <path d="M10 26c7-8 13-8 20 0s13 8 20 0" stroke="#fffaf2" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>
+          <path d="M10 35c7-8 13-8 20 0s13 8 20 0" stroke="#fffaf2" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M10 44c7-8 13-8 20 0s13 8 20 0" stroke="#fffaf2" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+          <circle cx="47" cy="18" r="4" fill="#ffcf8a"/>
+          <defs>
+            <linearGradient id="softwave-mark" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8b6ad0"/>
+              <stop offset="1" stop-color="#e98d6d"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </span>
+      <span class="brand-word">Soft<em>wave</em></span>
+    </a>
+
+    <div class="header-actions">
+      <span class="header-badge"><span class="pulse-dot"></span>On-device</span>
+      <button class="button button-quiet" type="button" id="help-btn">Shortcuts</button>
+      <button class="button button-quiet" type="button" id="install-btn" hidden>Install</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse-dot"></span>Local · private · instant</p>
+        <h1>Describe a mood.<br><em>Get a little track.</em></h1>
+        <p class="hero-lede">Softwave composes an original instrumental sketch from a short prompt: chords, melody, bass and drums, arranged and mixed in your browser. No account, no upload, no API key.</p>
+        <div class="hero-stats">
+          <div><span>6</span><p>moods</p></div>
+          <div><span>0</span><p>dependencies</p></div>
+          <div><span>2</span><p>export formats</p></div>
+        </div>
+      </div>
+      <div class="hero-orbit" aria-hidden="true">
+        <div class="orbit-ring orbit-ring-a"></div>
+        <div class="orbit-ring orbit-ring-b"></div>
+        <div class="orbit-ring orbit-ring-c"></div>
+        <div class="orbit-core">
+          <svg viewBox="0 0 120 120" fill="none">
+            <path d="M12 54c13-15 24-15 37 0s24 15 37 0" stroke="#7a5cc4" stroke-width="4" stroke-linecap="round"/>
+            <path d="M12 68c13-15 24-15 37 0s24 15 37 0" stroke="#2f8f7a" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+            <path d="M12 40c13-15 24-15 37 0s24 15 37 0" stroke="#d07a3f" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="studio" id="studio" aria-label="Softwave studio">
+      <section class="panel composer-card" aria-labelledby="composer-title">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Sketch</p>
+            <h2 id="composer-title">What should it feel like?</h2>
+          </div>
+          <span class="chip chip-quiet" id="variation-output">Variation 0</span>
+        </header>
+
+        <label class="field" for="prompt-input">
+          <span class="field-label">Prompt</span>
+          <textarea id="prompt-input" rows="3" maxlength="280" placeholder="rainy late-night study, soft piano, brushed drums" spellcheck="false"></textarea>
+        </label>
+
+        <div class="prompt-actions">
+          <button class="button button-solid button-large" type="button" id="generate-btn">
+            Generate <kbd>G</kbd>
+          </button>
+          <button class="button button-quiet button-large" type="button" id="reroll-btn">
+            Reroll <kbd>R</kbd>
+          </button>
+        </div>
+
+        <div class="field-block">
+          <span class="field-label">Preset</span>
+          <div class="preset-list" id="preset-list" role="group" aria-label="Choose a preset"></div>
+        </div>
+
+        <div class="control-grid">
+          <label class="field" for="key-select">
+            <span class="field-label">Key</span>
+            <select id="key-select"></select>
+          </label>
+          <label class="field" for="scale-select">
+            <span class="field-label">Scale</span>
+            <select id="scale-select"></select>
+          </label>
+          <label class="field field-range" for="tempo-range">
+            <span class="field-label">Tempo <output id="tempo-output" for="tempo-range">76 BPM</output></span>
+            <input id="tempo-range" type="range" min="40" max="180" step="1" value="76">
+          </label>
+          <label class="field" for="bars-select">
+            <span class="field-label">Length</span>
+            <select id="bars-select"></select>
+          </label>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced · seed &amp; sharing</summary>
+          <div class="advanced-body">
+            <label class="field" for="seed-input">
+              <span class="field-label">Seed <span class="field-hint">optional — same seed, same notes</span></span>
+              <input id="seed-input" type="text" maxlength="80" placeholder="leave empty to use the prompt" autocomplete="off" spellcheck="false">
+            </label>
+            <p class="seed-hint">Effective seed: <code id="seed-hint">softwave</code></p>
+            <button class="button button-quiet" type="button" id="share-btn">Copy share link</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel player-card" aria-labelledby="player-title">
+        <header class="track-head">
+          <div class="track-copy">
+            <p class="eyebrow" id="track-eyebrow">Lo-fi</p>
+            <h2 id="track-title" tabindex="-1">Softwave sketch</h2>
+            <p class="track-meta" id="track-meta">Loading the studio…</p>
+          </div>
+          <div class="tag-list" id="track-tags"></div>
+        </header>
+
+        <div class="transport">
+          <button class="play-button" type="button" id="play-btn" aria-label="Play">
+            <span class="play-icon" id="play-icon" aria-hidden="true">▶</span>
+            <span id="play-label">Play</span>
+          </button>
+          <button class="icon-button" type="button" id="stop-btn" aria-label="Stop" title="Stop">■</button>
+          <button class="icon-button loop-button" type="button" id="loop-btn" aria-label="Loop" aria-pressed="true" title="Loop">⟲</button>
+          <div class="seek">
+            <span class="time" id="time-current">0:00</span>
+            <input id="seek-range" type="range" min="0" max="1" step="0.01" value="0" aria-label="Playback position">
+            <span class="time" id="time-total">0:00</span>
+          </div>
+          <label class="volume" for="master-range">
+            <span>Vol</span>
+            <input id="master-range" type="range" min="0" max="100" step="1" value="85" aria-label="Master volume">
+            <output id="master-output" for="master-range">85%</output>
+          </label>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="arrangement-canvas" aria-label="Arrangement timeline with five instrument lanes"></canvas>
+          <p class="canvas-hint" id="canvas-hint">Space to play · the timeline updates as it loops</p>
+        </div>
+
+        <div class="legend" aria-hidden="true">
+          <span><i class="legend-dot" style="--dot:#8f79c6"></i>Pad</span>
+          <span><i class="legend-dot" style="--dot:#2f6c91"></i>Bass</span>
+          <span><i class="legend-dot" style="--dot:#2f7a63"></i>Arp</span>
+          <span><i class="legend-dot" style="--dot:#a24e32"></i>Melody</span>
+          <span><i class="legend-dot" style="--dot:#a86b1f"></i>Drums</span>
+        </div>
+      </section>
+
+      <section class="panel mixer-card" aria-labelledby="mixer-title">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Balance</p>
+            <h2 id="mixer-title">Mixer</h2>
+          </div>
+          <span class="chip chip-quiet">Live</span>
+        </header>
+        <div class="mixer-list" id="mixer-list"></div>
+        <p class="panel-note">Solo one part to hear how the arrangement fits together, or mute a lane while the loop plays.</p>
+      </section>
+
+      <section class="panel export-card" aria-labelledby="export-title">
+        <header class="panel-head">
+          <div>
+            <p class="eyebrow">Take it with you</p>
+            <h2 id="export-title">Export</h2>
+          </div>
+        </header>
+        <p class="panel-lede">Rendered offline from the same graph you hear — no recording, no upload.</p>
+        <div class="export-actions">
+          <button class="button button-solid" type="button" id="export-wav">Download WAV</button>
+          <button class="button button-quiet" type="button" id="export-midi">Download MIDI</button>
+        </div>
+        <p class="status-line" id="export-status" aria-live="polite">Ready when you are.</p>
+        <ul class="export-notes">
+          <li><strong>WAV</strong> · 16-bit stereo, 44.1 kHz, with a short tail</li>
+          <li><strong>MIDI</strong> · 5 tracks, drums on channel 10</li>
+          <li><strong>Private</strong> · everything stays in this browser</li>
+        </ul>
+      </section>
+    </section>
+
+    <section class="how" aria-labelledby="how-title">
+      <div class="section-head">
+        <p class="eyebrow">Under the hood</p>
+        <h2 id="how-title">Algorithmic, not a model</h2>
+        <p>Softwave is not a neural clone of a hosted music service. It writes music with a seeded random generator, music theory and a small Web Audio synth kit. That keeps it instant, free and reproducible.</p>
+      </div>
+      <div class="how-grid">
+        <article>
+          <span class="how-index">01</span>
+          <h3>Seeded</h3>
+          <p>Your prompt and seed drive a mulberry32 PRNG. The same inputs always produce the same notes, so a track can be rebuilt or shared.</p>
+        </article>
+        <article>
+          <span class="how-index">02</span>
+          <h3>Composed</h3>
+          <p>Mood presets pick progressions, voicings, motifs and drum patterns. Sections build from intro to peak and back down again.</p>
+        </article>
+        <article>
+          <span class="how-index">03</span>
+          <h3>Played</h3>
+          <p>A lookahead scheduler drives subtractive synths, noise drums, reverb and delay. The offline renderer reuses the same graph for export.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <span class="brand-word brand-word-small">Soft<em>wave</em></span>
+      <p>A local instrumental sketchbook. Made for the browser, not the cloud.</p>
+    </div>
+    <div class="footer-meta">
+      <span>No accounts · No uploads · No keys</span>
+      <button class="link-button" type="button" id="footer-help">Keyboard shortcuts</button>
+    </div>
+  </footer>
+
+  <dialog class="modal" id="help-dialog" aria-labelledby="help-title">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Studio controls</p>
+        <h2 id="help-title">Keyboard shortcuts</h2>
+      </div>
+      <button class="icon-button" type="button" id="close-help" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <dl class="shortcut-grid">
+        <div><dt>Space</dt><dd>Play / pause</dd></div>
+        <div><dt>G</dt><dd>Generate from the prompt</dd></div>
+        <div><dt>R</dt><dd>Reroll the variation</dd></div>
+        <div><dt>L</dt><dd>Toggle looping</dd></div>
+        <div><dt>W</dt><dd>Render a WAV</dd></div>
+        <div><dt>M</dt><dd>Download MIDI</dd></div>
+        <div><dt>← / →</dt><dd>Nudge the playhead</dd></div>
+        <div><dt>Esc</dt><dd>Close this dialog</dd></div>
+      </dl>
+      <p class="modal-note">Shortcuts pause while you are typing in the prompt, seed or a slider.</p>
+    </div>
+  </dialog>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+  <p class="sr-only" id="live-region" aria-live="polite"></p>
+
+  <noscript>
+    <div class="noscript">Softwave needs JavaScript and Web Audio to compose and play tracks. Everything runs locally.</div>
+  </noscript>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "Softwave",
+  "slug": "softwave",
+  "type": "web-app",
+  "status": "beta",
+  "created_at": "2026-11-22T11:27:00+00:00",
+  "updated_at": "2026-11-24T11:45:00+00:00",
+  "homepage": "https://nanapaknanapak-huemirit.github.io/softwave/",
+  "summary": "A local, private instrumental sketch studio: prompt in, arranged algorithmic track out, WAV/MIDI export.",
+  "runtime": "browser",
+  "dependencies": "none",
+  "entry": "index.html",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "docs": {
+    "concept": "01-concept/concept.md",
+    "music_design": "02-music-design/music-design.md",
+    "arrangement": "03-arrangement/arrangement.md",
+    "report": "04-documentation/production-report.md",
+    "review": "05-review/review.md"
+  },
+  "outputs": ["WAV 16-bit stereo", "MIDI Type-1"],
+  "privacy": "All composition, playback and rendering happen on the device. No network calls, accounts or API keys."
+}
