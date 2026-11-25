@@ -65,9 +65,9 @@
       <div class="hero-copy">
         <p class="eyebrow"><span class="pulse-dot"></span>Local · private · instant</p>
         <h1>Describe a mood.<br><em>Get a little track.</em></h1>
-        <p class="hero-lede">Softwave composes an original instrumental sketch from a short prompt: chords, melody, bass and drums, arranged and mixed in your browser. No account, no upload, no API key.</p>
+        <p class="hero-lede">Softwave composes an original sketch from a short prompt: chords, melody, bass and drums, arranged and mixed in your browser. Add lyrics for a syllable-aligned melody guide. No account, no upload, no API key.</p>
         <div class="hero-stats">
-          <div><span>6</span><p>moods</p></div>
+          <div><span id="preset-count">18</span><p>presets</p></div>
           <div><span>0</span><p>dependencies</p></div>
           <div><span>2</span><p>export formats</p></div>
         </div>
@@ -96,10 +96,25 @@
           <span class="chip chip-quiet" id="variation-output">Variation 0</span>
         </header>
 
+        <div class="field-block">
+          <span class="field-label">Compose</span>
+          <div class="mode-toggle" id="mode-toggle" role="group" aria-label="Composition mode">
+            <button class="mode-option is-active" type="button" data-mode="instrumental" aria-pressed="true">Instrumental</button>
+            <button class="mode-option" type="button" data-mode="lyrics" aria-pressed="false">Lyrics melody</button>
+          </div>
+        </div>
+
         <label class="field" for="prompt-input">
           <span class="field-label">Prompt</span>
           <textarea id="prompt-input" rows="3" maxlength="280" placeholder="rainy late-night study, soft piano, brushed drums" spellcheck="false"></textarea>
         </label>
+
+        <label class="field" for="lyrics-input" id="lyrics-field" hidden>
+          <span class="field-label">Lyrics <span class="field-hint">one line per phrase · stays on this device</span></span>
+          <textarea id="lyrics-input" rows="6" maxlength="2000" placeholder="Write or paste one lyric line per row…" spellcheck="false"></textarea>
+        </label>
+        <p class="lyrics-hint" id="lyrics-hint" hidden>0 lines · 0 syllables</p>
+        <p class="lyrics-note" id="lyrics-note" hidden>Original melody generated on-device from your lyrics and seed. Nothing is looked up or sampled.</p>
 
         <div class="prompt-actions">
           <button class="button button-solid button-large" type="button" id="generate-btn">
@@ -112,7 +127,7 @@
 
         <div class="field-block">
           <span class="field-label">Preset</span>
-          <div class="preset-list" id="preset-list" role="group" aria-label="Choose a preset"></div>
+          <div class="preset-groups" id="preset-list" aria-label="Choose a preset"></div>
         </div>
 
         <div class="control-grid">
@@ -279,7 +294,7 @@
         <div><dt>← / →</dt><dd>Nudge the playhead</dd></div>
         <div><dt>Esc</dt><dd>Close this dialog</dd></div>
       </dl>
-      <p class="modal-note">Shortcuts pause while you are typing in the prompt, seed or a slider.</p>
+      <p class="modal-note">Shortcuts pause while you are typing in the prompt, lyrics, seed or a slider.</p>
     </div>
   </dialog>
 

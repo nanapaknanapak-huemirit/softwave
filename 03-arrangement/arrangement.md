@@ -21,14 +21,16 @@ Length is normalised to multiples of four bars between 8 and 128.
 
 Pad chords are one per bar. Bass and arp are 16-step patterns. Melody phrases are two bars. Drums are per-bar patterns plus fills.
 
+In lyrics mode the Melody lane becomes the vocal guide. Each lyric line is placed in a phrase after the Intro and before the Outro, two bars by default or one bar when the arrangement is crowded. The guide uses one note per syllable and is monophonic.
+
 ## Timeline
 
 The canvas shows five horizontal lanes. Pitched notes are blocks positioned by beat and pitch range; drum hits are small dots offset by drum type. Section names and boundaries sit above the lanes, bar grid lines below them. A vertical amber playhead follows playback and seeking.
 
 ## Mixer
 
-Five strips: Pad, Bass, Arp, Melody, Drums. Each has a volume fader plus mute and solo. The any-solo rule applies: if any lane is soloed, only soloed lanes are audible. Changes are smoothed with short gain targets and applied to the offline render as well.
+Five strips: Pad, Bass, Arp, Melody, Drums. The Melody strip carries the lyric guide in lyrics mode. Each has a volume fader plus mute and solo. The any-solo rule applies: if any lane is soloed, only soloed lanes are audible. Changes are smoothed with short gain targets and applied to the offline render as well.
 
 ## Export lengths
 
-WAV duration = `bars × 4 × 60 / tempo` plus a 3-second tail for reverb and release. MIDI uses 480 PPQ, a tempo meta event, five tracks and drums on channel 10.
+WAV duration = `bars × 4 × 60 / tempo` plus a 3-second tail for reverb and release. MIDI uses 480 PPQ, a tempo meta event, five instrument tracks and drums on channel 10. In lyrics mode the melody track is named "Vocal Melody".

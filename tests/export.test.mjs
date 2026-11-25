@@ -73,6 +73,22 @@ test("encodeMidi writes a type-1 file with five instrument tracks", () => {
   assert.ok(bytes.length > 200);
 });
 
+test("encodeMidi labels the lyric guide track", () => {
+  const arrangement = buildArrangement({
+    seed: "lyric midi",
+    prompt: "lyric midi",
+    presetId: "chill",
+    bars: 8,
+    mode: "lyrics",
+    lyrics: "hello world\nsecond line"
+  });
+  const bytes = encodeMidi(arrangement);
+  const text = Buffer.from(bytes).toString("latin1");
+  assert.equal((text.match(/MTrk/g) || []).length, 6);
+  assert.ok(text.includes("Vocal Melody"));
+  assert.ok(bytes.length > 200);
+});
+
 test("blob helpers expose the right MIME types", () => {
   assert.equal(wavBlob(fakeStereoBuffer()).type, "audio/wav");
   const arrangement = buildArrangement({ seed: "blob", presetId: "lofi", bars: 8 });

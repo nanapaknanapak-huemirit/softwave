@@ -1,30 +1,50 @@
 import { PART_ORDER, PART_LABELS, PART_COLORS } from "./composer.js";
-import { PRESETS, PRESET_ORDER } from "./presets.js";
+import { PRESETS, PRESET_CATEGORIES, PRESET_ORDER } from "./presets.js";
 import { clamp } from "./util.js";
 
 export function renderPresets(container, activeId, onSelect) {
   if (!container) return;
   container.textContent = "";
-  for (const id of PRESET_ORDER) {
-    const preset = PRESETS[id];
-    if (!preset) continue;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "preset-chip";
-    button.dataset.preset = id;
-    button.setAttribute("aria-pressed", "false");
+  for (const category of PRESET_CATEGORIES) {
+    const ids = PRESET_ORDER.filter((id) => PRESETS[id]?.category === category.id);
+    if (!ids.length) continue;
 
-    const name = document.createElement("span");
-    name.className = "preset-name";
-    name.textContent = preset.name;
+    const group = document.createElement("div");
+    group.className = "preset-group";
+    group.dataset.category = category.id;
 
-    const tagline = document.createElement("span");
-    tagline.className = "preset-tagline";
-    tagline.textContent = preset.tagline;
+    const label = document.createElement("p");
+    label.className = "preset-group-label";
+    label.textContent = category.name;
 
-    button.append(name, tagline);
-    button.addEventListener("click", () => onSelect(id));
-    container.append(button);
+    const list = document.createElement("div");
+    list.className = "preset-list";
+    list.setAttribute("role", "group");
+    list.setAttribute("aria-label", category.name);
+
+    for (const id of ids) {
+      const preset = PRESETS[id];
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "preset-chip";
+      button.dataset.preset = id;
+      button.setAttribute("aria-pressed", "false");
+
+      const name = document.createElement("span");
+      name.className = "preset-name";
+      name.textContent = preset.name;
+
+      const tagline = document.createElement("span");
+      tagline.className = "preset-tagline";
+      tagline.textContent = preset.tagline;
+
+      button.append(name, tagline);
+      button.addEventListener("click", () => onSelect(id));
+      list.append(button);
+    }
+
+    group.append(label, list);
+    container.append(group);
   }
   updatePresetSelection(container, activeId);
 }

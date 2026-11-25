@@ -7,6 +7,8 @@ export const STORAGE_KEY = "softwave:v1";
 
 export const DEFAULT_SETTINGS = Object.freeze({
   prompt: "",
+  mode: "instrumental",
+  lyrics: "",
   presetId: "lofi",
   key: 0,
   scale: "auto",
@@ -70,6 +72,8 @@ export function normalizeSettings(raw = {}) {
 
   return {
     prompt: String(source.prompt ?? "").slice(0, 280),
+    mode: source.mode === "lyrics" ? "lyrics" : "instrumental",
+    lyrics: String(source.lyrics ?? "").slice(0, 2000),
     presetId,
     key,
     scale,
@@ -95,6 +99,8 @@ export function arrangementOptions(settings) {
   return {
     seed: deriveSeed(normalized),
     presetId: normalized.presetId,
+    mode: normalized.mode,
+    lyrics: normalized.lyrics,
     key: normalized.key,
     scale: normalized.scale === "auto" ? null : normalized.scale,
     tempo: normalized.tempo,
@@ -141,6 +147,8 @@ export function encodeHash(settings) {
   const params = new URLSearchParams();
   params.set("prompt", normalized.prompt);
   params.set("seed", normalized.seed);
+  params.set("mode", normalized.mode);
+  if (normalized.lyrics) params.set("lyrics", normalized.lyrics);
   params.set("preset", normalized.presetId);
   params.set("key", String(normalized.key));
   params.set("scale", normalized.scale);
@@ -165,6 +173,14 @@ export function decodeHash(hash) {
 
   if (params.has("prompt")) {
     partial.prompt = params.get("prompt");
+    found = true;
+  }
+  if (params.has("mode")) {
+    partial.mode = params.get("mode");
+    found = true;
+  }
+  if (params.has("lyrics")) {
+    partial.lyrics = params.get("lyrics");
     found = true;
   }
   if (params.has("preset")) {

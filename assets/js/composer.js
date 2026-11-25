@@ -1,4 +1,4 @@
-import { Rng, normalizeSeed } from "./seed.js";
+import { Rng, hashString, normalizeSeed } from "./seed.js";
 import {
   SCALES,
   SCALE_LABELS,
@@ -9,6 +9,7 @@ import {
 } from "./theory.js";
 import { NOTE_NAMES, clamp } from "./util.js";
 import { getPreset, makeTitle } from "./presets.js";
+import { analyzeLyrics, buildLyricRhythm, melodyFingerprint, planLyricPhrases } from "./lyrics.js";
 
 export const PART_ORDER = ["pad", "bass", "arp", "melody", "drums"];
 
@@ -112,7 +113,9 @@ export function buildArrangement(options = {}) {
     tempo = null,
     bars = 32,
     prompt = "",
-    variation = 0
+    variation = 0,
+    mode = "instrumental",
+    lyrics = ""
   } = options;
 
   const preset = getPreset(presetId);
@@ -134,10 +137,31 @@ export function buildArrangement(options = {}) {
   const progression = preset.progression;
   const chordAt = (globalBar) => progression[globalBar % progression.length];
 
+  const lyricsText = String(lyrics ?? "").trim();
+  const lyricsMode = mode === "lyrics" && lyricsText.length > 0;
+  let lyricsResult = null;
+
   composePad(parts.pad, sections, preset, keyFinal, scaleFinal, beatsPerBar, rng.fork("pad"));
   composeBass(parts.bass, sections, preset, keyFinal, scaleFinal, beatsPerBar, chordAt, rng.fork("bass"));
   composeArp(parts.arp, sections, preset, keyFinal, scaleFinal, beatsPerBar, chordAt, rng.fork("arp"));
-  composeMelody(parts.melody, sections, preset, keyFinal, scaleFinal, beatsPerBar, chordAt, rng.fork("melody"));
+  if (lyricsMode) {
+    const analysis = analyzeLyrics(lyricsText);
+    lyricsResult = composeLyricMelody(
+      parts.melody,
+      sections,
+      preset,
+      keyFinal,
+      scaleFinal,
+      beatsPerBar,
+      chordAt,
+      analysis,
+      rng.fork(`lyrics:${preset.id}:${hashString(lyricsText)}`),
+      seed,
+      lyricsText
+    );
+  } else {
+    composeMelody(parts.melody, sections, preset, keyFinal, scaleFinal, beatsPerBar, chordAt, rng.fork("melody"));
+  }
   composeDrums(parts.drums, sections, preset, beatsPerBar, rng.fork("drums"));
 
   for (const name of PART_ORDER) {
@@ -153,6 +177,10 @@ export function buildArrangement(options = {}) {
     seed: String(seed),
     variation,
     prompt,
+    mode: lyricsMode ? "lyrics" : "instrumental",
+    lyrics: lyricsMode ? lyricsText : "",
+    lyricsMeta: lyricsResult,
+    melodyOriginal: lyricsMode,
     presetId: preset.id,
     presetName: preset.name,
     preset,
@@ -331,6 +359,88 @@ function composeMelody(part, sections, preset, key, scale, beatsPerBar, chordAt,
     }
     cursor += section.bars;
   }
+}
+
+function buildLyricSlots(sections, barsPerLine) {
+  const slots = [];
+  let cursor = 0;
+  for (const section of sections) {
+    const usable = section.name !== "Intro" && section.name !== "Outro";
+    if (usable && barsPerLine > 0) {
+      for (let bar = 0; bar + barsPerLine <= section.bars; bar += barsPerLine) {
+        slots.push({ startBar: cursor + bar, intensity: section.intensity });
+      }
+    }
+    cursor += section.bars;
+  }
+  return slots;
+}
+
+function composeLyricMelody(part, sections, preset, key, scale, beatsPerBar, chordAt, analysis, rng, seed, lyricsText) {
+  const middleBars = sections
+    .filter((section) => section.name !== "Intro" && section.name !== "Outro")
+    .reduce((sum, section) => sum + section.bars, 0);
+  const plan = planLyricPhrases(analysis.lines, middleBars);
+  const slots = buildLyricSlots(sections, plan.barsPerLine);
+  const base = melodyBase(key, preset.melody.octave);
+  let previousStep = rng.int(0, 6);
+  let motif = null;
+
+  for (let i = 0; i < plan.placed.length; i += 1) {
+    const line = plan.placed[i];
+    const slot = slots[i];
+    if (!slot) break;
+    const phraseBeats = plan.barsPerLine * beatsPerBar;
+    const rhythm = buildLyricRhythm(line, phraseBeats, rng.fork(`line-${line.index}`));
+    const steps = [];
+
+    for (let n = 0; n < rhythm.notes.length; n += 1) {
+      const note = rhythm.notes[n];
+      const barOffset = Math.min(plan.barsPerLine - 1, Math.floor(note.beat / beatsPerBar));
+      const degree = chordAt(slot.startBar + barOffset);
+      const strong = note.stress || Math.abs(note.beat % 2) < 1e-6;
+      let step;
+      if (motif && i % 2 === 1) {
+        const prior = motif.steps[n] ?? motif.steps[motif.steps.length - 1] ?? previousStep;
+        step = prior + rng.pick([-1, 0, 0, 1]);
+      } else {
+        step = previousStep + rng.pick(strong ? [-2, -1, 0, 1, 2] : [-1, 0, 0, 1]);
+      }
+      step = clamp(step, -5, 14);
+      if (strong) step = snapToChord(rng, step, degree, scale);
+      steps.push(step);
+      previousStep = step;
+    }
+
+    motif = { steps };
+    for (let n = 0; n < rhythm.notes.length; n += 1) {
+      const note = rhythm.notes[n];
+      const midi = clamp(base + scaleDegree(0, scale, steps[n]), 55, 88);
+      const velocity = clamp(
+        (note.stress ? 0.9 : 0.72) + slot.intensity * 0.08 + rng.float(-0.04, 0.04),
+        0.2,
+        1
+      );
+      part.push({
+        part: "melody",
+        beat: slot.startBar * beatsPerBar + note.beat,
+        dur: Math.max(0.15, note.dur * preset.melody.gate),
+        midi,
+        velocity
+      });
+    }
+  }
+
+  return {
+    lineCount: analysis.lineCount,
+    syllableCount: analysis.syllableCount,
+    stanzaCount: analysis.stanzaCount,
+    barsPerLine: plan.barsPerLine,
+    capacity: plan.capacity,
+    placedLines: plan.placed.length,
+    overflowLines: plan.extra.length,
+    fingerprint: melodyFingerprint(seed, lyricsText, part)
+  };
 }
 
 function composeDrums(part, sections, preset, beatsPerBar, rng) {

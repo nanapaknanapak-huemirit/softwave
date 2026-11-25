@@ -60,10 +60,23 @@ test("normalizeSettings clamps and repairs values", () => {
 test("normalizeSettings defaults are stable", () => {
   const settings = normalizeSettings();
   assert.equal(settings.presetId, DEFAULT_SETTINGS.presetId);
+  assert.equal(settings.mode, "instrumental");
+  assert.equal(settings.lyrics, "");
   assert.equal(settings.tempo, DEFAULT_SETTINGS.tempo);
   assert.equal(settings.bars, DEFAULT_SETTINGS.bars);
   assert.equal(settings.loop, true);
   assert.equal(settings.master, 0.85);
+});
+
+test("normalizeSettings validates lyrics mode and caps lyrics", () => {
+  const settings = normalizeSettings({
+    mode: "lyrics",
+    lyrics: "x".repeat(3000)
+  });
+  assert.equal(settings.mode, "lyrics");
+  assert.equal(settings.lyrics.length, 2000);
+
+  assert.equal(normalizeSettings({ mode: "nonsense" }).mode, "instrumental");
 });
 
 test("defaultMix includes every part", () => {
@@ -108,6 +121,10 @@ test("arrangementOptions maps auto scale to null", () => {
 
   const major = arrangementOptions({ prompt: "x", presetId: "chill", scale: "major" });
   assert.equal(major.scale, "major");
+
+  const lyricOptions = arrangementOptions({ prompt: "x", mode: "lyrics", lyrics: "a b" });
+  assert.equal(lyricOptions.mode, "lyrics");
+  assert.equal(lyricOptions.lyrics, "a b");
 });
 
 test("encodeHash and decodeHash round-trip shareable fields", () => {
@@ -131,6 +148,24 @@ test("encodeHash and decodeHash round-trip shareable fields", () => {
   assert.equal(decoded.tempo, "100");
   assert.equal(decoded.bars, "16");
   assert.equal(decoded.variation, "2");
+});
+
+test("lyrics mode round-trips through the share link", () => {
+  const settings = normalizeSettings({
+    prompt: "neon night",
+    mode: "lyrics",
+    lyrics: "one two three\nfour five",
+    presetId: "synthwave",
+    bars: 16
+  });
+  const decoded = decodeHash(`#${encodeHash(settings)}`);
+  assert.equal(decoded.mode, "lyrics");
+  assert.equal(decoded.lyrics, "one two three\nfour five");
+
+  const instrumental = normalizeSettings({ prompt: "rain", mode: "instrumental" });
+  const plain = decodeHash(`#${encodeHash(instrumental)}`);
+  assert.equal(plain.mode, "instrumental");
+  assert.equal(plain.lyrics, undefined);
 });
 
 test("empty prompt and seed survive a share link", () => {

@@ -87,6 +87,65 @@ test("notes sit inside the arrangement and flatten sorts them", () => {
   }
 });
 
+test("lyrics mode writes an original, deterministic guide melody", () => {
+  const lyrics = "one two three\nfour five six\nseven eight\nnine ten";
+  const options = {
+    ...OPTIONS,
+    bars: 16,
+    mode: "lyrics",
+    lyrics
+  };
+  const a = buildArrangement(options);
+  const b = buildArrangement(options);
+  assert.equal(a.mode, "lyrics");
+  assert.equal(a.melodyOriginal, true);
+  assert.ok(a.lyricsMeta);
+  assert.equal(a.lyricsMeta.lineCount, 4);
+  assert.equal(a.lyricsMeta.placedLines, 4);
+  assert.equal(a.lyricsMeta.overflowLines, 0);
+  assert.equal(a.lyricsMeta.barsPerLine, 2);
+  assert.match(a.lyricsMeta.fingerprint, /^[0-9a-f]{8}$/);
+  assert.deepEqual(a.parts.melody, b.parts.melody);
+
+  for (const note of a.parts.melody) {
+    assert.ok(note.beat >= 16, "lyrics start after the intro");
+    assert.ok(note.beat < 48, "lyrics finish before the outro");
+    assert.ok(note.dur > 0);
+  }
+
+  const other = buildArrangement({ ...options, lyrics: "nine ten\neleven twelve" });
+  assert.notDeepEqual(a.parts.melody, other.parts.melody);
+
+  const shared = { ...OPTIONS, bars: 16, mode: "lyrics", lyrics, scale: "minor" };
+  const synthwave = buildArrangement({ ...shared, presetId: "synthwave" });
+  const triphop = buildArrangement({ ...shared, presetId: "triphop" });
+  assert.notEqual(synthwave.lyricsMeta.fingerprint, triphop.lyricsMeta.fingerprint);
+});
+
+test("lyrics mode reports lines that do not fit", () => {
+  const lyrics = Array.from({ length: 20 }, (_, index) => `line ${index + 1}`).join("\n");
+  const arrangement = buildArrangement({
+    ...OPTIONS,
+    bars: 16,
+    mode: "lyrics",
+    lyrics
+  });
+  assert.equal(arrangement.lyricsMeta.barsPerLine, 1);
+  assert.equal(arrangement.lyricsMeta.placedLines, 8);
+  assert.equal(arrangement.lyricsMeta.overflowLines, 12);
+});
+
+test("empty lyrics fall back to the instrumental melody", () => {
+  const arrangement = buildArrangement({
+    ...OPTIONS,
+    mode: "lyrics",
+    lyrics: "   "
+  });
+  assert.equal(arrangement.mode, "instrumental");
+  assert.equal(arrangement.lyricsMeta, null);
+  assert.equal(arrangement.melodyOriginal, false);
+});
+
 test("preset and key overrides are respected", () => {
   const arrangement = buildArrangement({
     ...OPTIONS,

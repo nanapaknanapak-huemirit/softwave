@@ -2,7 +2,7 @@
 
 ## One line
 
-A pastel, single-page sketch studio that turns a short mood prompt into a complete instrumental loop in seconds.
+A pastel, single-page sketch studio that turns a short mood prompt into a complete instrumental loop — or a syllable-aligned melody guide for your lyrics — in seconds.
 
 ## Problem
 
@@ -15,20 +15,22 @@ Softwave writes music instead of generating audio with a neural network. A seede
 ## Experience
 
 1. Type a mood (or leave the poetic placeholder).
-2. Pick a preset chip; adjust key, scale, tempo or length if wanted.
-3. Press **Generate**. The track appears with a title, timeline and stats, and starts playing.
-4. Reroll for another variation of the same seed.
-5. Balance the five lanes in the mixer.
-6. Export WAV or MIDI, or copy a share link that reproduces the track.
+2. Pick a preset chip from the subgenre, atmosphere or functional groups; adjust key, scale, tempo or length if wanted.
+3. Optionally switch to **Lyrics melody** and paste one lyric line per row.
+4. Press **Generate**. The track appears with a title, timeline and stats, and starts playing.
+5. Reroll for another variation of the same seed.
+6. Balance the five lanes in the mixer.
+7. Export WAV or MIDI, or copy a share link that reproduces the track and lyrics.
 
 ## What makes it "simpler than Suno"
 
 - No sign-in, no queue, no credits.
 - One prompt box and one primary button.
-- Six moods instead of a sprawling genre browser.
+- A curated palette of 18 presets, grouped into subgenres, atmospheres and functional music, instead of an unbounded genre list.
 - Deterministic: the same link always returns the same composition.
+- Lyrics become an original, syllable-aligned melody guide — not sampled or looked up from another creator.
 - Exports are playable in any DAW.
 
 ## Non-goals
 
-Singing, lyrics, covers, voice cloning, a social feed or a marketplace. Softwave is a sketchbook, not a production suite.
+Synthesized singing, voice cloning, covers, a social feed or a marketplace. Softwave can write a melody guide for your words, but it does not sing them. It is a sketchbook, not a production suite.

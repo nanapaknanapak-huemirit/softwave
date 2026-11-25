@@ -113,7 +113,7 @@ export function encodeMidi(arrangement) {
     { part: "pad", channel: 0, program: 88, name: "Pad" },
     { part: "bass", channel: 1, program: 37, name: "Bass" },
     { part: "arp", channel: 2, program: 80, name: "Arp" },
-    { part: "melody", channel: 3, program: 79, name: "Melody" },
+    { part: "melody", channel: 3, program: 79, name: arrangement.mode === "lyrics" ? "Vocal Melody" : "Melody" },
     { part: "drums", channel: 9, program: null, name: "Drums" }
   ];
 

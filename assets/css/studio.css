@@ -244,6 +244,72 @@ main {
   flex: 1;
 }
 
+.mode-toggle {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-2);
+}
+
+.mode-option {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mode-option:hover {
+  color: var(--ink);
+}
+
+.mode-option.is-active {
+  background: var(--accent-soft);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.lyrics-hint,
+.lyrics-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.lyrics-note {
+  padding-left: 10px;
+  border-left: 2px solid var(--accent);
+  line-height: 1.45;
+}
+
+.preset-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.preset-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.preset-group-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .preset-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

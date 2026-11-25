@@ -42,6 +42,7 @@ const required = [
   "assets/css/theme.css",
   "assets/css/studio.css",
   "assets/js/app.js",
+  "assets/js/lyrics.js",
   "assets/js/state.js",
   "assets/js/ui.js",
   "assets/icons/icon-192.png",
@@ -102,6 +103,12 @@ for (const file of jsFiles) {
     if (!specifier.startsWith(".")) continue;
     const target = resolve(dirname(file), specifier);
     if (!existsSync(target)) fail(`Unresolved import in ${file.replace(root + "/", "")}: ${specifier}`);
+  }
+  if (/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/.test(source)) {
+    fail(`Runtime network API found in ${file.replace(root + "/", "")}; the studio must stay on-device.`);
+  }
+  if (/(?:from|import)\s*\(\s*["'`]https?:/.test(source)) {
+    fail(`Remote module import found in ${file.replace(root + "/", "")}; the studio must stay on-device.`);
   }
 }
 

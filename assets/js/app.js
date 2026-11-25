@@ -1,6 +1,7 @@
 import { PART_LABELS, PART_ORDER, buildArrangement } from "./composer.js";
 import { Transport } from "./engine.js";
 import { midiBlob, wavBlob } from "./export.js";
+import { lyricSummary } from "./lyrics.js";
 import { PRESETS, PRESET_ORDER } from "./presets.js";
 import { renderArrangement } from "./render.js";
 import { SCALE_LABELS, SCALE_IDS } from "./theory.js";
@@ -29,6 +30,12 @@ const BARS_OPTIONS = [8, 16, 24, 32, 48, 64, 96, 128];
 
 const els = {
   prompt: $("#prompt-input"),
+  modeToggle: $("#mode-toggle"),
+  lyrics: $("#lyrics-input"),
+  lyricsField: $("#lyrics-field"),
+  lyricsHint: $("#lyrics-hint"),
+  lyricsNote: $("#lyrics-note"),
+  presetCount: $("#preset-count"),
   generate: $("#generate-btn"),
   reroll: $("#reroll-btn"),
   presets: $("#preset-list"),
@@ -81,6 +88,7 @@ let installPrompt = null;
 let tempoTimer = 0;
 let seedTimer = 0;
 let promptTimer = 0;
+let lyricsTimer = 0;
 
 function debounceWithTimer(callback, wait, getTimer, setTimer) {
   return (...args) => {
@@ -130,6 +138,18 @@ const persistPrompt = debounceWithTimer(
   }
 );
 
+const commitLyrics = debounceWithTimer(
+  () => {
+    captureForm();
+    generate({ autoplay: transport.playing });
+  },
+  520,
+  () => lyricsTimer,
+  (value) => {
+    lyricsTimer = value;
+  }
+);
+
 function option(value, label) {
   const node = document.createElement("option");
   node.value = String(value);
@@ -148,6 +168,7 @@ function populateControls() {
 
 function syncControls() {
   els.prompt.value = settings.prompt;
+  els.lyrics.value = settings.lyrics;
   els.key.value = String(settings.key);
   els.scale.value = settings.scale;
   els.tempo.value = String(settings.tempo);
@@ -159,8 +180,35 @@ function syncControls() {
   els.variation.textContent = `Variation ${settings.variation}`;
   els.loop.setAttribute("aria-pressed", String(settings.loop));
   els.loop.classList.toggle("is-on", settings.loop);
+  updateModeControls();
+  updateLyricsUI();
   updatePresetSelection(els.presets, settings.presetId);
   updateSeedHint();
+}
+
+function updateModeControls() {
+  for (const button of els.modeToggle.querySelectorAll("[data-mode]")) {
+    const active = button.dataset.mode === settings.mode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  }
+}
+
+function updateLyricsUI(meta = null) {
+  const lyricsMode = settings.mode === "lyrics";
+  els.lyricsField.hidden = !lyricsMode;
+  els.lyricsHint.hidden = !lyricsMode;
+  els.lyricsNote.hidden = !lyricsMode;
+  if (!lyricsMode) return;
+  const summary = lyricSummary(els.lyrics.value);
+  let text = `${summary.text} · original melody guide`;
+  if (meta) {
+    const extra = meta.overflowLines
+      ? ` · ${meta.overflowLines} extra line${meta.overflowLines === 1 ? "" : "s"} not used`
+      : "";
+    text = `${summary.text} · ${meta.placedLines} phrase${meta.placedLines === 1 ? "" : "s"} · fingerprint ${meta.fingerprint}${extra}`;
+  }
+  els.lyricsHint.textContent = text;
 }
 
 function updateSeedHint() {
@@ -171,6 +219,8 @@ function updateSeedHint() {
 function formValues() {
   return {
     prompt: els.prompt.value,
+    mode: settings.mode,
+    lyrics: els.lyrics.value,
     seed: els.seed.value,
     key: els.key.value,
     scale: els.scale.value,
@@ -182,6 +232,7 @@ function formValues() {
 function captureForm() {
   settings = normalizeSettings({ ...settings, ...formValues() });
   updateSeedHint();
+  updateLyricsUI();
   els.tempoOut.textContent = `${settings.tempo} BPM`;
   els.variation.textContent = `Variation ${settings.variation}`;
 }
@@ -193,16 +244,25 @@ function setStatus(message, tone = "") {
 
 function updateTrack() {
   if (!arrangement) return;
+  const lyricsMode = arrangement.mode === "lyrics" && arrangement.lyricsMeta;
   els.title.textContent = arrangement.title;
-  els.eyebrow.textContent = arrangement.presetName;
+  els.eyebrow.textContent = lyricsMode ? `${arrangement.presetName} · Lyrics` : arrangement.presetName;
   els.meta.textContent = `${arrangement.keyName} ${arrangement.scaleName} · ${arrangement.tempo} BPM · ${arrangement.bars} bars · ${formatTime(arrangement.duration)}`;
   const seedTag = arrangement.seed.length > 20 ? `${arrangement.seed.slice(0, 20)}…` : arrangement.seed;
-  renderTags(els.tags, [
+  const tags = [
     `${arrangement.tempo} BPM`,
     `${arrangement.keyName} ${arrangement.scaleName}`,
     `${arrangement.bars} bars`,
     `seed · ${seedTag}`
-  ]);
+  ];
+  if (lyricsMode) {
+    tags.push(
+      `lyrics · ${arrangement.lyricsMeta.syllableCount} syllables`,
+      `original · ${arrangement.lyricsMeta.fingerprint}`
+    );
+    updateLyricsUI(arrangement.lyricsMeta);
+  }
+  renderTags(els.tags, tags);
   els.seek.max = String(arrangement.totalBeats);
   els.seek.value = "0";
   els.total.textContent = formatTime(arrangement.duration);
@@ -500,6 +560,21 @@ function bindEvents() {
     updateSeedHint();
     persistPrompt();
   });
+  els.modeToggle.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-mode]");
+    if (!button) return;
+    const mode = button.dataset.mode === "lyrics" ? "lyrics" : "instrumental";
+    if (mode === settings.mode) return;
+    captureForm();
+    settings = normalizeSettings({ ...settings, mode });
+    syncControls();
+    saveSettings(settings);
+    generate({ autoplay: transport.playing });
+  });
+  els.lyrics.addEventListener("input", () => {
+    updateLyricsUI();
+    commitLyrics();
+  });
   els.seed.addEventListener("input", () => {
     updateSeedHint();
     commitSeed();
@@ -633,6 +708,7 @@ function registerServiceWorker() {
 
 async function init() {
   populateControls();
+  els.presetCount.textContent = String(PRESET_ORDER.length);
   applySharedHash();
   syncControls();
   bindEvents();
