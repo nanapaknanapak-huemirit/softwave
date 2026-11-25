@@ -76,6 +76,7 @@ export function renderMixer(container, mix, onChange) {
     dot.setAttribute("aria-hidden", "true");
 
     const words = document.createElement("div");
+    words.className = "mix-words";
     const name = document.createElement("span");
     name.className = "mix-name";
     name.textContent = PART_LABELS[part];

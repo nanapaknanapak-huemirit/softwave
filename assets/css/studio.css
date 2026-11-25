@@ -197,6 +197,13 @@ main {
   align-items: start;
 }
 
+.studio-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
 .panel {
   position: relative;
   padding: 24px;
@@ -640,15 +647,24 @@ main {
   flex: none;
 }
 
+.mix-words {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
 .mix-name {
   font-size: 0.84rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .mix-value {
   font-family: var(--font-mono);
   font-size: 0.66rem;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .mix-strip input[type="range"] {
@@ -859,6 +875,10 @@ main {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .studio-side {
+    display: contents;
+  }
+
   .how-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -955,7 +975,9 @@ main {
   .header-actions #help-btn {
     display: none;
   }
+}
 
+@media (max-width: 360px) {
   .preset-list {
     grid-template-columns: minmax(0, 1fr);
   }

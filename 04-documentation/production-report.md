@@ -35,16 +35,15 @@ npm run build
 node scripts/serve.mjs   # checked with a local HTTP request
 ```
 
-Unit suites cover determinism, musical bounds, prompt mapping, preset categories, lyric parsing, lyric rhythm, hash round-trips, storage and encoders. The checker validates HTML references, ids, imports, manifest icons, service-worker shell entries, required files and package scripts, and rejects runtime network APIs in `assets/js`. A headless Firefox smoke run (temporary harness, removed afterwards) confirmed the canvas renders, presets update the track, transport/mute/seek controls respond and the help dialog opens with no runtime errors. The expanded palette and lyrics mode have not had a fresh browser smoke run.
+Unit suites cover determinism, musical bounds, prompt mapping, preset categories, lyric parsing, lyric rhythm, hash round-trips, storage and encoders. The checker validates HTML references, ids, imports, manifest icons, service-worker shell entries, required files and package scripts, and rejects runtime network APIs in `assets/js`. A headless Firefox smoke run (temporary harness, removed afterwards) confirmed the canvas renders, presets update the track, transport/mute/seek controls respond and the help dialog opens with no runtime errors. A later headless screenshot pass at 390, 768 and 1440 px confirmed the grouped preset browser, lyrics mode, mixer and export render in both instrumental and lyrics modes; this pass caught and fixed a desktop column gap and cramped mixer labels.
 
 ## Not verified
 
 - Real speaker playback, browser autoplay policy behaviour and perceived loudness.
-- Visual layout at phone/tablet/desktop widths in Chrome and Firefox.
+- Light/dark theme switching and full interaction layout checks in Chrome and Firefox.
 - Service-worker install and offline reload in a real browser.
 - WAV/MIDI files opened in a DAW.
 - Lyric line/syllable alignment and the melody fingerprint in a real browser.
-- The taller categorized preset browser at phone/tablet/desktop widths.
 
 These are marked **NOT TESTED** and need a human pass. See `05-review/review.md`.
 

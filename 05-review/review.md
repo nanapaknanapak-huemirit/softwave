@@ -9,7 +9,8 @@
 | `npm run build` | pass |
 | Static server responds | pass (HTTP 200 for `/` and modules) |
 | Icon generation | pass |
-| Headless browser smoke | pass (14 checks: canvas paint, presets, transport toggles, mute, seek, help dialog, no runtime errors) — predates the categorized palette and lyrics mode |
+| Headless interaction smoke | pass (14 checks: canvas paint, presets, transport toggles, mute, seek, help dialog, no runtime errors) — predates the categorized palette and lyrics mode |
+| Headless layout screenshots | pass (1440, 768 and 390 px; instrumental and lyrics modes; grouped presets, mixer labels, no column gaps) |
 
 ## Human checks still required
 
@@ -23,7 +24,7 @@ These are **NOT TESTED** by automation and should be confirmed before calling th
 6. **MIDI export** — open in a DAW; confirm five instrument tracks, tempo, drums on channel 10, sensible notes, and a "Vocal Melody" track name in lyrics mode.
 7. **Persistence** — change prompt/preset/mix/lyrics, reload, confirm they return.
 8. **Share link** — copy the link, open in a new session, confirm the same title, seed, mode and lyrics.
-9. **Responsive layout** — check 390 px, 768 px and 1440 px widths in light and dark mode, including the taller categorized preset browser.
+9. **Responsive layout** — screenshots pass at 390 px, 768 px and 1440 px; still confirm light/dark mode and real interaction at those widths.
 10. **PWA** — install, go offline, reload; the shell should still open.
 11. **Accessibility** — keyboard-only pass, focus visibility, dialog focus trap, timer/slider labels, mode-toggle labels.
 12. **Preset palette** — every one of the 18 chips selects, regenerates and shows the correct category group.
