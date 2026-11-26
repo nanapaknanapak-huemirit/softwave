@@ -1,5 +1,6 @@
 import { PART_ORDER, PART_LABELS, PART_COLORS } from "./composer.js";
 import { PRESETS, PRESET_CATEGORIES, PRESET_ORDER } from "./presets.js";
+import { SECTION_TYPES, lineStats, sectionLabel } from "./songwriter.js";
 import { clamp } from "./util.js";
 
 export function renderPresets(container, activeId, onSelect) {
@@ -333,6 +334,125 @@ export function drawArrangement(canvas, arrangement, beat = 0) {
   ctx.lineTo(playheadX, pad.top - 2);
   ctx.closePath();
   ctx.fill();
+}
+
+function songActionButton(action, label, title) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "song-action";
+  button.dataset.action = action;
+  button.textContent = label;
+  button.title = title;
+  button.setAttribute("aria-label", title);
+  return button;
+}
+
+function renderSongLine(section, line, index) {
+  const row = document.createElement("div");
+  row.className = "song-line";
+  row.dataset.lineId = line.id;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "song-line-input";
+  input.value = line.text;
+  input.maxLength = 160;
+  input.placeholder = "Write a line…";
+  input.spellcheck = false;
+  input.dataset.action = "line-input";
+  input.setAttribute("aria-label", `${sectionLabel(section)} line ${index + 1}`);
+
+  const stats = document.createElement("span");
+  stats.className = "song-line-stats";
+  stats.setAttribute("aria-hidden", "true");
+
+  const remove = songActionButton("line-remove", "×", "Remove line");
+
+  const rhymes = document.createElement("div");
+  rhymes.className = "song-rhymes";
+  rhymes.hidden = true;
+
+  row.append(input, stats, remove, rhymes);
+  updateSongLine(row, line.text);
+  return row;
+}
+
+function renderSongSection(section) {
+  const block = document.createElement("section");
+  block.className = "song-section";
+  block.dataset.sectionId = section.id;
+
+  const head = document.createElement("div");
+  head.className = "song-section-head";
+
+  const select = document.createElement("select");
+  select.className = "song-section-select";
+  select.dataset.action = "section-type";
+  select.setAttribute("aria-label", "Section type");
+  for (const type of SECTION_TYPES) {
+    const entry = document.createElement("option");
+    entry.value = type.id;
+    entry.textContent = type.name;
+    select.append(entry);
+  }
+  select.value = section.type;
+
+  const actions = document.createElement("div");
+  actions.className = "song-section-actions";
+  actions.append(
+    songActionButton("section-up", "↑", "Move section up"),
+    songActionButton("section-down", "↓", "Move section down"),
+    songActionButton("line-add", "+ line", "Add a line"),
+    songActionButton("section-remove", "×", "Remove section")
+  );
+
+  head.append(select, actions);
+
+  const lines = document.createElement("div");
+  lines.className = "song-lines";
+  section.lines.forEach((line, index) => lines.append(renderSongLine(section, line, index)));
+
+  block.append(head, lines);
+  return block;
+}
+
+export function renderSongwriter(container, draft) {
+  if (!container) return;
+  container.textContent = "";
+  for (const section of draft?.sections || []) {
+    container.append(renderSongSection(section));
+  }
+}
+
+export function updateSongLine(row, text) {
+  if (!row) return;
+  const stats = lineStats(text);
+  const badge = row.querySelector(".song-line-stats");
+  if (!badge) return;
+  const trimmed = String(text ?? "").trim();
+  badge.textContent = trimmed ? `${stats.syllables} syll` : "";
+  badge.dataset.rhyme = stats.rhymeKey || "";
+}
+
+export function renderRhymeChips(row, suggestions) {
+  if (!row) return;
+  const box = row.querySelector(".song-rhymes");
+  if (!box) return;
+  box.textContent = "";
+  if (!suggestions.length) {
+    box.hidden = true;
+    return;
+  }
+  for (const word of suggestions) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "rhyme-chip";
+    chip.dataset.action = "rhyme";
+    chip.dataset.word = word;
+    chip.textContent = word;
+    box.append(chip);
+  }
+  box.hidden = false;
 }
 
 export function showToast(stack, message, tone = "info", timeout = 3600) {

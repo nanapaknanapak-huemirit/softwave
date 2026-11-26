@@ -109,10 +109,29 @@
           <textarea id="prompt-input" rows="3" maxlength="280" placeholder="rainy late-night study, soft piano, brushed drums" spellcheck="false"></textarea>
         </label>
 
-        <label class="field" for="lyrics-input" id="lyrics-field" hidden>
-          <span class="field-label">Lyrics <span class="field-hint">one line per phrase · stays on this device</span></span>
-          <textarea id="lyrics-input" rows="6" maxlength="2000" placeholder="Write or paste one lyric line per row…" spellcheck="false"></textarea>
-        </label>
+        <div class="field" id="lyrics-field" hidden>
+          <div class="songwriter-toolbar">
+            <span class="field-label">Songwriter <span class="field-hint">compose your own lyrics · stays on this device</span></span>
+            <div class="songwriter-actions">
+              <select id="draft-select" aria-label="Saved lyric drafts"></select>
+              <button class="song-action" type="button" id="draft-save">Save draft</button>
+              <button class="song-action" type="button" id="draft-delete">Delete</button>
+              <button class="song-action" type="button" id="raw-toggle" aria-pressed="false">Raw text</button>
+            </div>
+          </div>
+          <div class="songwriter" id="songwriter" aria-label="Lyric songwriter"></div>
+          <div class="songwriter-add">
+            <span>Add section</span>
+            <button class="song-action" type="button" data-add-section="verse">+ Verse</button>
+            <button class="song-action" type="button" data-add-section="chorus">+ Chorus</button>
+            <button class="song-action" type="button" data-add-section="bridge">+ Bridge</button>
+            <button class="song-action" type="button" data-add-section="outro">+ Outro</button>
+          </div>
+          <label class="field field-raw" for="lyrics-input" id="lyrics-raw" hidden>
+            <span class="field-label">Raw lyrics <span class="field-hint">paste or edit as plain text</span></span>
+            <textarea id="lyrics-input" rows="6" maxlength="2000" placeholder="Write or paste one lyric line per row…" spellcheck="false"></textarea>
+          </label>
+        </div>
         <p class="lyrics-hint" id="lyrics-hint" hidden>0 lines · 0 syllables</p>
         <p class="lyrics-note" id="lyrics-note" hidden>Original melody generated on-device from your lyrics and seed. Nothing is looked up or sampled.</p>
 

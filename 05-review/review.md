@@ -11,7 +11,9 @@
 | Icon generation | pass |
 | Headless interaction smoke | pass (14 checks: canvas paint, presets, transport toggles, mute, seek, help dialog, no runtime errors) — predates the categorized palette and lyrics mode |
 | Headless layout screenshots | pass (1440, 768 and 390 px; instrumental and lyrics modes; grouped presets, mixer labels, no column gaps) |
-| Service-worker v3 | pass (headless Firefox: registers, serves edited HTML on reload, offline fallback keeps the shell; stale-profile upgrade pending) |
+| Songwriter unit suites | pass (sections, immutable edits, syllables, rhyme keys/suggestions, serialisation, draft storage) |
+| Songwriter headless pass | pass (type a line, rhyme chips, click a rhyme, add/reorder sections, change type, raw paste, save draft, reload persistence) |
+| Service-worker v4 | pass (headless Firefox: registers, serves edited HTML on reload, offline fallback keeps the shell; stale-profile upgrade pending) |
 
 ## Human checks still required
 
@@ -31,12 +33,16 @@ These are **NOT TESTED** by automation and should be confirmed before calling th
 12. **Preset palette** — every one of the 18 chips selects, regenerates and shows the correct category group.
 13. **Lyrics mode** — toggle the mode, paste lines, confirm the live line/syllable hint, phrase placement after the intro, overflow warning when lines do not fit, and a stable fingerprint for the same lyrics and seed.
 14. **Originality notice** — confirm the lyrics note is visible and the network panel shows no requests during generation or export.
+15. **Songwriter drafts** — save a named draft, reload, load it again, then delete it; confirm the list and storage stay consistent.
+16. **Rhyme hints** — focus a line, click a suggested rhyme, and confirm only the last word changes while the rest of the line is preserved.
 
 ## Known limitations
 
 - Melody register can occasionally sit above the pad's top note; this is musical, not a bug.
 - Offline rendering blocks only asynchronously; very long tracks (128 bars) can take several seconds and use a lot of memory.
-- The service worker caches all JS eagerly; the cache name was bumped to `softwave-shell-v3` and navigation/asset fetches are now network-first, so a deploy applies on the next load.
+- The service worker caches all JS eagerly; the cache name was bumped to `softwave-shell-v4` and navigation/asset fetches are now network-first, so a deploy applies on the next load.
+- The rhyme bank is small, English-only and heuristic; suggestions are hints, not pronunciation-accurate rhymes.
+- Named lyric drafts live only in this browser's `localStorage`; they are not part of share links or exports.
 - No true mobile install prompt fallback beyond a toast.
 - Syllable counting is a heuristic; irregular words may be approximate. The live hint is a guide, not a pronunciation dictionary.
 - "Original" means algorithmically generated with no corpus, lookup, sampling or network. It is not a legal guarantee against coincidental similarity; users remain responsible for final clearance.

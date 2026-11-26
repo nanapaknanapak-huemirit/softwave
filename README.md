@@ -1,6 +1,6 @@
 # Softwave
 
-A local, private instrumental sketch studio. Type a mood, press **Generate**, and Softwave composes a short track with chords, bass, arpeggio, melody and drums — then plays it in the browser and exports WAV or MIDI. Switch to **Lyrics melody** to turn your words into a syllable-aligned, original guide melody.
+A local, private instrumental sketch studio. Type a mood, press **Generate**, and Softwave composes a short track with chords, bass, arpeggio, melody and drums — then plays it in the browser and exports WAV or MIDI. Switch to **Lyrics melody** to write your own lyrics in a structured songwriter, then turn them into a syllable-aligned, original guide melody.
 
 **Live site:** https://nanapaknanapak-huemirit.github.io/softwave/
 
@@ -8,7 +8,7 @@ Softwave is **not** a neural clone of a hosted music service. It is a seeded alg
 
 ## Status
 
-`beta` — scaffold, composition engine, Web Audio playback, arrangement timeline, mixer, persistence, sharing, lyrics melody guide and WAV/MIDI export are implemented. Unit tests, the static check and the production build pass. Browser audio and visual rendering still need a human pass; see `05-review/review.md`.
+`beta` — scaffold, composition engine, Web Audio playback, arrangement timeline, mixer, persistence, sharing, the lyric songwriter, the lyrics melody guide and WAV/MIDI export are implemented. Unit tests, the static check and the production build pass. Browser audio and visual rendering still need a human pass; see `05-review/review.md`.
 
 ## Preset palette
 
@@ -28,6 +28,18 @@ Lyrics mode does not synthesize a singer. It composes an original guide melody i
 - An eight-character melody fingerprint for provenance.
 
 Originality is structural: no melody corpus, no lookup, no sampling and no network call. This guarantees algorithmic generation, not legal clearance against coincidental similarity; the user remains responsible for final clearance.
+
+## Songwriter
+
+Lyrics mode includes a small songwriter for composing your own original words on-device:
+
+- Sections (Intro, Verse, Chorus, Bridge, Outro) that you can add, reorder, retype and remove.
+- One input per line with a live syllable count and a rhyme key.
+- Rhyme hints from a small, hand-written English word bank; click a chip to swap the last word.
+- Named drafts saved in `localStorage` under `softwave:lyrics-drafts:v1`, plus a **Raw text** toggle for pasting plain lyrics.
+- The songwriter serialises to the same plain-text format the melody guide already reads, so share links and exports keep working.
+
+No text is generated for you, no corpus is sampled and nothing leaves the page. Rhyme hints are suggestions, not a pronunciation dictionary.
 
 ## Quick start
 
@@ -89,7 +101,7 @@ softwave/
 │   ├── css/studio.css         layout and studio components
 │   ├── favicon.svg
 │   ├── icons/                 generated PNG icons + OG image
-│   └── js/                    app, state, ui, composer, lyrics, synth, engine, export
+│   └── js/                    app, state, ui, composer, lyrics, songwriter, rhymes, synth, engine, export
 ├── scripts/                   serve, check, build, icon generation
 ├── tests/                     Node test runner suites
 ├── 01-concept/                brief and scope
@@ -105,6 +117,7 @@ softwave/
 - No accounts, uploads, analytics, API keys or third-party scripts.
 - Tracks and lyric melodies are generated deterministically in the page.
 - Settings, mix, the last prompt and lyrics live in `localStorage` under `softwave:v1`.
+- Named lyric drafts live in `localStorage` under `softwave:lyrics-drafts:v1`.
 - The service worker caches the app shell locally.
 - The static check rejects runtime network APIs in `assets/js`.
 
@@ -116,7 +129,7 @@ npm run check
 npm run build
 ```
 
-`npm run check` validates local references, duplicate ids, module imports, manifest icons, the service-worker shell, required docs and package scripts, and rejects runtime network APIs. The WAV/MIDI encoders, composer, lyrics parser and preset palette are covered by unit tests.
+`npm run check` validates local references, duplicate ids, module imports, manifest icons, the service-worker shell, required docs and package scripts, and rejects runtime network APIs. The WAV/MIDI encoders, composer, lyrics parser, songwriter model, rhyme bank and preset palette are covered by unit tests.
 
 ## License
 

@@ -10,20 +10,40 @@ import {
   decodeHash,
   defaultMix,
   encodeHash,
+  loadDrafts,
   loadSettings,
   normalizeMix,
   normalizeSettings,
+  saveDrafts,
   saveSettings
 } from "./state.js";
+import {
+  addLine,
+  addSection,
+  createDraft,
+  draftToText,
+  lineStats,
+  moveSection,
+  removeLine,
+  removeSection,
+  replaceLastWord,
+  setLine,
+  setSectionType,
+  suggestRhymes,
+  textToDraft
+} from "./songwriter.js";
 import { NOTE_NAMES, $, clamp, downloadBlob, formatBars, formatTime, slugify } from "./util.js";
 import {
   drawArrangement,
   renderMixer,
   renderPresets,
+  renderRhymeChips,
+  renderSongwriter,
   renderTags,
   showToast,
   updateMixer,
-  updatePresetSelection
+  updatePresetSelection,
+  updateSongLine
 } from "./ui.js";
 
 const BARS_OPTIONS = [8, 16, 24, 32, 48, 64, 96, 128];
@@ -35,6 +55,12 @@ const els = {
   lyricsField: $("#lyrics-field"),
   lyricsHint: $("#lyrics-hint"),
   lyricsNote: $("#lyrics-note"),
+  songwriter: $("#songwriter"),
+  lyricsRaw: $("#lyrics-raw"),
+  draftSelect: $("#draft-select"),
+  draftSave: $("#draft-save"),
+  draftDelete: $("#draft-delete"),
+  rawToggle: $("#raw-toggle"),
   presetCount: $("#preset-count"),
   generate: $("#generate-btn"),
   reroll: $("#reroll-btn"),
@@ -89,6 +115,10 @@ let tempoTimer = 0;
 let seedTimer = 0;
 let promptTimer = 0;
 let lyricsTimer = 0;
+let draft = createDraft();
+let drafts = loadDrafts();
+let selectedDraftId = "";
+let rawMode = false;
 
 function debounceWithTimer(callback, wait, getTimer, setTimer) {
   return (...args) => {
@@ -169,6 +199,7 @@ function populateControls() {
 function syncControls() {
   els.prompt.value = settings.prompt;
   if (els.lyrics) els.lyrics.value = settings.lyrics;
+  syncDraftFromSettings();
   els.key.value = String(settings.key);
   els.scale.value = settings.scale;
   els.tempo.value = String(settings.tempo);
@@ -215,6 +246,196 @@ function updateLyricsUI(meta = null) {
 function updateSeedHint() {
   const seed = settings.seed.trim() || settings.prompt.trim() || "softwave";
   els.seedHint.textContent = seed;
+}
+
+function formatDraftDate(value) {
+  const date = new Date(Number(value) || Date.now());
+  try {
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  } catch {
+    return "";
+  }
+}
+
+function renderDraftOptions() {
+  if (!els.draftSelect) return;
+  els.draftSelect.textContent = "";
+  els.draftSelect.append(option("", "Current lyrics"));
+  for (const entry of drafts) {
+    els.draftSelect.append(option(entry.id, `${entry.name} · ${formatDraftDate(entry.updatedAt)}`));
+  }
+  els.draftSelect.value = drafts.some((entry) => entry.id === selectedDraftId)
+    ? selectedDraftId
+    : "";
+}
+
+function renderWriter() {
+  if (!els.songwriter) return;
+  renderSongwriter(els.songwriter, draft);
+}
+
+function syncDraftFromSettings() {
+  draft = textToDraft(settings.lyrics, { title: draft.title });
+  renderWriter();
+  renderDraftOptions();
+}
+
+function commitDraft() {
+  if (els.lyrics) els.lyrics.value = draftToText(draft);
+  updateLyricsUI();
+  commitLyrics();
+}
+
+function refreshRhymes(row, text) {
+  if (!row) return;
+  const stats = lineStats(text);
+  renderRhymeChips(row, stats.lastWord ? suggestRhymes(stats.lastWord, 6) : []);
+}
+
+function applyRhymeChip(chip) {
+  const row = chip.closest(".song-line");
+  const section = chip.closest(".song-section");
+  const input = row?.querySelector(".song-line-input");
+  if (!row || !section || !input) return;
+  input.value = replaceLastWord(input.value, chip.dataset.word || "");
+  draft = setLine(draft, section.dataset.sectionId, row.dataset.lineId, input.value);
+  updateSongLine(row, input.value);
+  refreshRhymes(row, input.value);
+  commitDraft();
+  input.focus();
+}
+
+function saveCurrentDraft() {
+  const text = draftToText(draft);
+  if (!text.trim()) {
+    showToast(els.toast, "Write a line before saving a draft.", "info");
+    return;
+  }
+  const suggested = draft.title && draft.title !== "Untitled draft" ? draft.title : "Draft";
+  const answer = window.prompt("Name this lyric draft", suggested);
+  if (answer === null) return;
+  const name = answer.trim().slice(0, 60) || `Draft ${drafts.length + 1}`;
+  const entry = {
+    id: `draft-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    name,
+    text,
+    updatedAt: Date.now()
+  };
+  drafts = [entry, ...drafts].slice(0, 50);
+  draft = { ...draft, title: name };
+  saveDrafts(drafts);
+  selectedDraftId = entry.id;
+  renderDraftOptions();
+  showToast(els.toast, `Saved “${name}”.`, "success");
+}
+
+function deleteSelectedDraft() {
+  if (!selectedDraftId) {
+    showToast(els.toast, "Select a saved draft to delete.", "info");
+    return;
+  }
+  const entry = drafts.find((item) => item.id === selectedDraftId);
+  drafts = drafts.filter((item) => item.id !== selectedDraftId);
+  saveDrafts(drafts);
+  selectedDraftId = "";
+  renderDraftOptions();
+  showToast(els.toast, `Deleted “${entry?.name || "draft"}”.`, "success");
+}
+
+function loadSelectedDraft() {
+  const id = els.draftSelect?.value || "";
+  selectedDraftId = id;
+  if (!id) return;
+  const entry = drafts.find((item) => item.id === id);
+  if (!entry) return;
+  draft = textToDraft(entry.text, { title: entry.name });
+  if (els.lyrics) els.lyrics.value = draftToText(draft);
+  renderWriter();
+  updateLyricsUI();
+  captureForm();
+  saveSettings(settings);
+  generate({ autoplay: transport.playing });
+  showToast(els.toast, `Loaded “${entry.name}”.`, "success");
+}
+
+function bindSongwriter() {
+  if (els.songwriter) {
+    els.songwriter.addEventListener("input", (event) => {
+      const input = event.target.closest(".song-line-input");
+      if (!input) return;
+      const row = input.closest(".song-line");
+      const section = input.closest(".song-section");
+      if (!row || !section) return;
+      draft = setLine(draft, section.dataset.sectionId, row.dataset.lineId, input.value);
+      updateSongLine(row, input.value);
+      refreshRhymes(row, input.value);
+      commitDraft();
+    });
+
+    els.songwriter.addEventListener("focusin", (event) => {
+      const input = event.target.closest(".song-line-input");
+      if (!input) return;
+      refreshRhymes(input.closest(".song-line"), input.value);
+    });
+
+    els.songwriter.addEventListener("click", (event) => {
+      const chip = event.target.closest?.("[data-action='rhyme']");
+      if (chip) {
+        event.preventDefault();
+        applyRhymeChip(chip);
+        return;
+      }
+      const button = event.target.closest?.("[data-action]");
+      if (!button) return;
+      const action = button.dataset.action;
+      if (action === "line-input" || action === "section-type") return;
+      const section = button.closest(".song-section");
+      const sectionId = section?.dataset.sectionId;
+      if (!sectionId) return;
+      if (action === "section-up" || action === "section-down") {
+        draft = moveSection(draft, sectionId, action === "section-up" ? -1 : 1);
+      } else if (action === "line-add") {
+        draft = addLine(draft, sectionId);
+      } else if (action === "line-remove") {
+        const row = button.closest(".song-line");
+        if (!row) return;
+        draft = removeLine(draft, sectionId, row.dataset.lineId);
+      } else if (action === "section-remove") {
+        draft = removeSection(draft, sectionId);
+      } else {
+        return;
+      }
+      renderWriter();
+      commitDraft();
+    });
+
+    els.songwriter.addEventListener("change", (event) => {
+      const select = event.target.closest(".song-section-select");
+      if (!select) return;
+      const section = select.closest(".song-section");
+      if (!section) return;
+      draft = setSectionType(draft, section.dataset.sectionId, select.value);
+      commitDraft();
+    });
+  }
+
+  for (const button of document.querySelectorAll("[data-add-section]")) {
+    button.addEventListener("click", () => {
+      draft = addSection(draft, button.dataset.addSection);
+      renderWriter();
+      commitDraft();
+    });
+  }
+
+  els.draftSave?.addEventListener("click", saveCurrentDraft);
+  els.draftDelete?.addEventListener("click", deleteSelectedDraft);
+  els.draftSelect?.addEventListener("change", loadSelectedDraft);
+  els.rawToggle?.addEventListener("click", () => {
+    rawMode = !rawMode;
+    if (els.lyricsRaw) els.lyricsRaw.hidden = !rawMode;
+    els.rawToggle.setAttribute("aria-pressed", String(rawMode));
+    if (rawMode && els.lyrics) els.lyrics.focus();
+  });
 }
 
 function formValues() {
@@ -342,6 +563,7 @@ async function generate({ autoplay = false, announce = true } = {}) {
 
 function selectPreset(id) {
   if (!PRESETS[id]) return;
+  captureForm();
   const wasPlaying = transport.playing;
   const preset = PRESETS[id];
   settings = normalizeSettings({
@@ -540,6 +762,7 @@ function bindEvents() {
   });
   els.reroll.addEventListener("click", reroll);
   renderPresets(els.presets, settings.presetId, selectPreset);
+  bindSongwriter();
 
   els.key.addEventListener("change", () => {
     captureForm();
@@ -573,6 +796,8 @@ function bindEvents() {
     generate({ autoplay: transport.playing });
   });
   els.lyrics?.addEventListener("input", () => {
+    draft = textToDraft(els.lyrics.value, { title: draft.title });
+    renderWriter();
     updateLyricsUI();
     commitLyrics();
   });

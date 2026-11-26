@@ -142,6 +142,50 @@ export function saveSettings(settings, store) {
   }
 }
 
+export const DRAFTS_KEY = "softwave:lyrics-drafts:v1";
+const MAX_DRAFTS = 50;
+
+export function normalizeDraft(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const text = String(raw.text ?? "").slice(0, 2000);
+  if (!text.trim()) return null;
+  const name = String(raw.name ?? "Draft").trim().slice(0, 60) || "Draft";
+  const id =
+    String(raw.id ?? "").trim() ||
+    `draft-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  const updatedAt = Number.isFinite(Number(raw.updatedAt)) ? Number(raw.updatedAt) : Date.now();
+  return { id, name, text, updatedAt };
+}
+
+export function loadDrafts(store) {
+  const target = getStore(store);
+  if (!target) return [];
+  try {
+    const raw = target.getItem(DRAFTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizeDraft).filter(Boolean).slice(0, MAX_DRAFTS);
+  } catch {
+    return [];
+  }
+}
+
+export function saveDrafts(drafts, store) {
+  const target = getStore(store);
+  if (!target) return false;
+  try {
+    const clean = (Array.isArray(drafts) ? drafts : [])
+      .map(normalizeDraft)
+      .filter(Boolean)
+      .slice(0, MAX_DRAFTS);
+    target.setItem(DRAFTS_KEY, JSON.stringify(clean));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function encodeHash(settings) {
   const normalized = normalizeSettings(settings);
   const params = new URLSearchParams();

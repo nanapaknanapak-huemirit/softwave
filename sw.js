@@ -1,4 +1,4 @@
-const CACHE = "softwave-shell-v3";
+const CACHE = "softwave-shell-v4";
 const SHELL = [
   "./",
   "index.html",
@@ -19,7 +19,9 @@ const SHELL = [
   "assets/js/lyrics.js",
   "assets/js/presets.js",
   "assets/js/render.js",
+  "assets/js/rhymes.js",
   "assets/js/seed.js",
+  "assets/js/songwriter.js",
   "assets/js/state.js",
   "assets/js/theory.js",
   "assets/js/ui.js",

@@ -3,15 +3,19 @@ import assert from "node:assert/strict";
 
 import {
   DEFAULT_SETTINGS,
+  DRAFTS_KEY,
   STORAGE_KEY,
   arrangementOptions,
   decodeHash,
   defaultMix,
   deriveSeed,
   encodeHash,
+  loadDrafts,
   loadSettings,
+  normalizeDraft,
   normalizeMix,
   normalizeSettings,
+  saveDrafts,
   saveSettings
 } from "../assets/js/state.js";
 import { PART_ORDER } from "../assets/js/composer.js";
@@ -195,4 +199,42 @@ test("loadSettings and saveSettings use storage safely", () => {
 
   assert.equal(saveSettings(settings, null), false);
   assert.deepEqual(loadSettings(null), normalizeSettings());
+});
+
+test("lyric drafts round-trip through storage", () => {
+  const store = memoryStore();
+  const draft = normalizeDraft({
+    id: "draft-1",
+    name: "Night drive",
+    text: "Headlights on the road\n\nA chorus in the dark",
+    updatedAt: 1234
+  });
+  assert.deepEqual(draft, {
+    id: "draft-1",
+    name: "Night drive",
+    text: "Headlights on the road\n\nA chorus in the dark",
+    updatedAt: 1234
+  });
+
+  assert.equal(saveDrafts([draft], store), true);
+  assert.ok(store.getItem(DRAFTS_KEY).includes("Night drive"));
+  assert.deepEqual(loadDrafts(store), [draft]);
+
+  store.setItem(DRAFTS_KEY, "{not json");
+  assert.deepEqual(loadDrafts(store), []);
+  store.setItem(DRAFTS_KEY, JSON.stringify({ not: "an array" }));
+  assert.deepEqual(loadDrafts(store), []);
+
+  assert.equal(saveDrafts([], null), false);
+  assert.deepEqual(loadDrafts(null), []);
+});
+
+test("normalizeDraft drops empty drafts and repairs fields", () => {
+  assert.equal(normalizeDraft(null), null);
+  assert.equal(normalizeDraft({ text: "   " }), null);
+  const repaired = normalizeDraft({ text: "one line" });
+  assert.ok(repaired.id);
+  assert.equal(repaired.name, "Draft");
+  assert.equal(repaired.text, "one line");
+  assert.equal(typeof repaired.updatedAt, "number");
 });

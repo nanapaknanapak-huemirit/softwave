@@ -43,6 +43,8 @@ const required = [
   "assets/css/studio.css",
   "assets/js/app.js",
   "assets/js/lyrics.js",
+  "assets/js/rhymes.js",
+  "assets/js/songwriter.js",
   "assets/js/state.js",
   "assets/js/ui.js",
   "assets/icons/icon-192.png",
