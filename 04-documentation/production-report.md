@@ -35,13 +35,13 @@ npm run build
 node scripts/serve.mjs   # checked with a local HTTP request
 ```
 
-Unit suites cover determinism, musical bounds, prompt mapping, preset categories, lyric parsing, lyric rhythm, hash round-trips, storage and encoders. The checker validates HTML references, ids, imports, manifest icons, service-worker shell entries, required files and package scripts, and rejects runtime network APIs in `assets/js`. A headless Firefox smoke run (temporary harness, removed afterwards) confirmed the canvas renders, presets update the track, transport/mute/seek controls respond and the help dialog opens with no runtime errors. A later headless screenshot pass at 390, 768 and 1440 px confirmed the grouped preset browser, lyrics mode, mixer and export render in both instrumental and lyrics modes; this pass caught and fixed a desktop column gap and cramped mixer labels.
+Unit suites cover determinism, musical bounds, prompt mapping, preset categories, lyric parsing, lyric rhythm, hash round-trips, storage and encoders. The checker validates HTML references, ids, imports, manifest icons, service-worker shell entries, required files and package scripts, and rejects runtime network APIs in `assets/js`. A headless Firefox smoke run (temporary harness, removed afterwards) confirmed the canvas renders, presets update the track, transport/mute/seek controls respond and the help dialog opens with no runtime errors. A later headless screenshot pass at 390, 768 and 1440 px confirmed the grouped preset browser, lyrics mode, mixer and export render in both instrumental and lyrics modes; this pass caught and fixed a desktop column gap and cramped mixer labels. A headless Firefox pass against the built site also verified the v3 service worker: it registers, serves edited HTML immediately on reload (network-first) and falls back to the cached shell when the server is stopped.
 
 ## Not verified
 
 - Real speaker playback, browser autoplay policy behaviour and perceived loudness.
 - Light/dark theme switching and full interaction layout checks in Chrome and Firefox.
-- Service-worker install and offline reload in a real browser.
+- Service-worker upgrade from a pre-existing stale cache in a real user profile (the v3 install, network-first reload and offline fallback were verified headlessly).
 - WAV/MIDI files opened in a DAW.
 - Lyric line/syllable alignment and the melody fingerprint in a real browser.
 

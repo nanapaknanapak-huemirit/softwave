@@ -1,4 +1,4 @@
-const CACHE = "softwave-shell-v2";
+const CACHE = "softwave-shell-v3";
 const SHELL = [
   "./",
   "index.html",
@@ -30,7 +30,11 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(SHELL))
+      .then((cache) =>
+        cache.addAll(
+          SHELL.map((entry) => new Request(new URL(entry, self.location.href), { cache: "reload" }))
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
@@ -50,39 +54,33 @@ function cacheable(request) {
   return url.origin === self.location.origin;
 }
 
-async function staleWhileRevalidate(request) {
+async function networkFirst(request) {
   const cache = await caches.open(CACHE);
-  const cached = await cache.match(request);
-  const network = fetch(request)
-    .then((response) => {
-      if (response.ok) cache.put(request, response.clone());
-      return response;
-    })
-    .catch(() => cached);
-  return cached || network;
-}
-
-async function navigationResponse(request) {
-  const cache = await caches.open(CACHE);
-  const cached =
-    (await cache.match(request)) ||
-    (await cache.match("index.html")) ||
-    (await cache.match("./"));
-  const network = fetch(request)
-    .then((response) => {
-      if (response.ok) cache.put("index.html", response.clone());
-      return response;
-    })
-    .catch(() => null);
-  return cached || (await network) || Response.error();
+  try {
+    const response = await fetch(request, { cache: "no-cache" });
+    if (response.ok) {
+      try {
+        await cache.put(request, response.clone());
+        if (request.mode === "navigate") {
+          await cache.put("index.html", response.clone());
+        }
+      } catch {
+        /* caching is best-effort; never fail the response over it */
+      }
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    if (request.mode === "navigate") {
+      return (await cache.match("index.html")) || (await cache.match("./")) || Response.error();
+    }
+    return Response.error();
+  }
 }
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (!cacheable(request)) return;
-  if (request.mode === "navigate") {
-    event.respondWith(navigationResponse(request));
-    return;
-  }
-  event.respondWith(staleWhileRevalidate(request));
+  event.respondWith(networkFirst(request));
 });

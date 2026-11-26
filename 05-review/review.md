@@ -11,6 +11,7 @@
 | Icon generation | pass |
 | Headless interaction smoke | pass (14 checks: canvas paint, presets, transport toggles, mute, seek, help dialog, no runtime errors) — predates the categorized palette and lyrics mode |
 | Headless layout screenshots | pass (1440, 768 and 390 px; instrumental and lyrics modes; grouped presets, mixer labels, no column gaps) |
+| Service-worker v3 | pass (headless Firefox: registers, serves edited HTML on reload, offline fallback keeps the shell; stale-profile upgrade pending) |
 
 ## Human checks still required
 
@@ -35,7 +36,7 @@ These are **NOT TESTED** by automation and should be confirmed before calling th
 
 - Melody register can occasionally sit above the pad's top note; this is musical, not a bug.
 - Offline rendering blocks only asynchronously; very long tracks (128 bars) can take several seconds and use a lot of memory.
-- The service worker caches all JS eagerly; the cache name was bumped to `softwave-shell-v2` for this release.
+- The service worker caches all JS eagerly; the cache name was bumped to `softwave-shell-v3` and navigation/asset fetches are now network-first, so a deploy applies on the next load.
 - No true mobile install prompt fallback beyond a toast.
 - Syllable counting is a heuristic; irregular words may be approximate. The live hint is a guide, not a pronunciation dictionary.
 - "Original" means algorithmically generated with no corpus, lookup, sampling or network. It is not a legal guarantee against coincidental similarity; users remain responsible for final clearance.

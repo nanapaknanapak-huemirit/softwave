@@ -4,3 +4,4 @@
 - **0.2.0** — 2026-11-23: studio UI, state persistence, mixer, share links, PWA shell, icons, scripts, tests and production docs completed.
 - **0.3.0** — 2026-11-25: 18 categorized presets (subgenres, atmospheres, functional music) and a syllable-aligned, original lyrics melody guide with fingerprinting and share/persistence support.
 - **0.3.1** — 2026-11-25: balanced the studio columns, grouped player/mixer/export in the side column, fixed mixer label spacing and kept two-column presets down to 360 px.
+- **0.3.2** — 2026-11-26: network-first service worker (v3) with cache-bypassing install, automatic reload on update and defensive guards so a stale cached page can no longer hide the lyrics mode.

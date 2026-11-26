@@ -168,7 +168,7 @@ function populateControls() {
 
 function syncControls() {
   els.prompt.value = settings.prompt;
-  els.lyrics.value = settings.lyrics;
+  if (els.lyrics) els.lyrics.value = settings.lyrics;
   els.key.value = String(settings.key);
   els.scale.value = settings.scale;
   els.tempo.value = String(settings.tempo);
@@ -187,6 +187,7 @@ function syncControls() {
 }
 
 function updateModeControls() {
+  if (!els.modeToggle) return;
   for (const button of els.modeToggle.querySelectorAll("[data-mode]")) {
     const active = button.dataset.mode === settings.mode;
     button.classList.toggle("is-active", active);
@@ -196,10 +197,10 @@ function updateModeControls() {
 
 function updateLyricsUI(meta = null) {
   const lyricsMode = settings.mode === "lyrics";
-  els.lyricsField.hidden = !lyricsMode;
-  els.lyricsHint.hidden = !lyricsMode;
-  els.lyricsNote.hidden = !lyricsMode;
-  if (!lyricsMode) return;
+  if (els.lyricsField) els.lyricsField.hidden = !lyricsMode;
+  if (els.lyricsHint) els.lyricsHint.hidden = !lyricsMode;
+  if (els.lyricsNote) els.lyricsNote.hidden = !lyricsMode;
+  if (!lyricsMode || !els.lyrics) return;
   const summary = lyricSummary(els.lyrics.value);
   let text = `${summary.text} · original melody guide`;
   if (meta) {
@@ -208,7 +209,7 @@ function updateLyricsUI(meta = null) {
       : "";
     text = `${summary.text} · ${meta.placedLines} phrase${meta.placedLines === 1 ? "" : "s"} · fingerprint ${meta.fingerprint}${extra}`;
   }
-  els.lyricsHint.textContent = text;
+  if (els.lyricsHint) els.lyricsHint.textContent = text;
 }
 
 function updateSeedHint() {
@@ -220,7 +221,7 @@ function formValues() {
   return {
     prompt: els.prompt.value,
     mode: settings.mode,
-    lyrics: els.lyrics.value,
+    lyrics: els.lyrics ? els.lyrics.value : "",
     seed: els.seed.value,
     key: els.key.value,
     scale: els.scale.value,
@@ -560,7 +561,7 @@ function bindEvents() {
     updateSeedHint();
     persistPrompt();
   });
-  els.modeToggle.addEventListener("click", (event) => {
+  els.modeToggle?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-mode]");
     if (!button) return;
     const mode = button.dataset.mode === "lyrics" ? "lyrics" : "instrumental";
@@ -571,7 +572,7 @@ function bindEvents() {
     saveSettings(settings);
     generate({ autoplay: transport.playing });
   });
-  els.lyrics.addEventListener("input", () => {
+  els.lyrics?.addEventListener("input", () => {
     updateLyricsUI();
     commitLyrics();
   });
@@ -701,9 +702,18 @@ function registerServiceWorker() {
     location.hostname === "localhost" ||
     location.hostname === "127.0.0.1";
   if (!secure) return;
-  navigator.serviceWorker.register("sw.js").catch((error) => {
-    console.warn("Service worker registration failed:", error);
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || refreshing) return;
+    refreshing = true;
+    location.reload();
   });
+  navigator.serviceWorker
+    .register("sw.js", { updateViaCache: "none" })
+    .catch((error) => {
+      console.warn("Service worker registration failed:", error);
+    });
 }
 
 async function init() {
